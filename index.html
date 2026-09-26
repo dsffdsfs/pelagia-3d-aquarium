@@ -1,0 +1,1327 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#071b27">
+  <meta name="description" content="Pelagia — живой трёхмерный аквариум. Наблюдайте за рифом, кормите рыб, меняйте время суток и слушайте океан.">
+  <title>PELAGIA — живой риф</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230a2732'/%3E%3Cpath d='M11 34c14-19 30-19 42 0-12 18-28 20-42 0zm7-1-9-9v20l9-11z' fill='%236de4d1'/%3E%3Ccircle cx='40' cy='29' r='2' fill='%230a2732'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      color-scheme: dark;
+      --deep: #071b27; --ink: #0a2632; --panel: #0a2935;
+      --line: rgba(145,228,216,.15); --line-bright: rgba(170,246,223,.29);
+      --text: #e7f5ec; --muted: #8ca9a9; --mint: #86edcf; --mint2: #b3f9d8;
+      --gold: #ffcc81; --coral: #ff907b; --radius: 20px;
+      --ease: cubic-bezier(.22,1,.36,1);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { min-height: 100%; background: var(--deep); scroll-behavior: smooth; }
+    body { margin: 0; min-width: 320px; min-height: 100vh; color: var(--text); background:
+      radial-gradient(ellipse 67% 58% at 49% 35%,rgba(25,100,108,.37),transparent 78%),
+      radial-gradient(ellipse 39% 64% at 96% 83%,rgba(15,77,86,.2),transparent 90%),
+      linear-gradient(155deg,#091e2c 0%,#061822 52%,#09232e 100%); overflow-x: hidden; }
+    body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 30; opacity: .16;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' opacity='.26' filter='url(%23n)'/%3E%3C/svg%3E"); }
+    button, input { font: inherit; }
+    button { cursor: pointer; color: inherit; }
+    button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid var(--mint); outline-offset: 4px; }
+    button:disabled { cursor: not-allowed; opacity: .55; }
+    ::selection { background: #90dcb9; color: #06202c; }
+    .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    .app { width: min(1700px,calc(100% - 72px)); margin: 0 auto; position: relative; }
+    .topbar { min-height: 104px; display: flex; align-items: center; justify-content: space-between; gap: 26px; border-bottom: 1px solid var(--line); }
+    .brand { display: inline-flex; align-items: center; gap: 14px; color: inherit; text-decoration: none; white-space: nowrap; }
+    .brand-icon { height: 39px; width: 39px; display: grid; place-items: center; border: 1px solid rgba(145,237,218,.5); border-radius: 50%; color: var(--mint); box-shadow: 0 0 26px rgba(60,230,207,.09); }
+    .brand-icon svg { width: 23px; height: 23px; }
+    .brand-type { font-size: 22px; font-weight: 780; letter-spacing: .24em; line-height: 1; }
+    .brand-type small { display: block; margin-top: 6px; font-size: 8px; font-weight: 700; letter-spacing: .37em; color: var(--mint); }
+    .top-center { display: flex; align-items: center; gap: 14px; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; }
+    .top-center::before, .top-center::after { content: ""; height: 1px; width: 30px; background: var(--line-bright); }
+    .live-pill { display: flex; align-items: center; gap: 9px; padding: 11px 14px; border: 1px solid var(--line-bright); border-radius: 99px; background: rgba(18,54,64,.45); font-size: 10px; font-weight: 750; letter-spacing: .16em; white-space: nowrap; }
+    .live-dot, .status-dot { flex: 0 0 auto; width: 7px; height: 7px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 0 4px rgba(125,241,205,.11),0 0 13px rgba(125,241,205,.64); }
+    .live-dot { animation: pulse 3.2s ease-in-out infinite; }
+    @keyframes pulse { 50% { opacity: .45; box-shadow: 0 0 0 8px rgba(125,241,205,.04),0 0 6px rgba(125,241,205,.4); } }
+    .layout { display: grid; grid-template-columns: minmax(220px,260px) minmax(0,1fr) minmax(230px,276px); align-items: stretch; gap: clamp(16px,2.1vw,34px); padding-top: 29px; }
+    .left, .right { min-width: 0; display: flex; flex-direction: column; }
+    .left { padding: 34px 0 8px; }
+    .eyebrow { margin: 0; display: flex; align-items: center; gap: 11px; color: var(--mint); font-size: 10px; letter-spacing: .28em; text-transform: uppercase; font-weight: 760; }
+    .eyebrow::before { content: ""; width: 19px; height: 1px; background: currentColor; }
+    h1 { margin: 29px 0 18px; max-width: 320px; font-size: clamp(40px,3.6vw,60px); letter-spacing: -.07em; line-height: 1.04; font-weight: 640; }
+    h1 em { display: block; color: var(--mint); font-family: Georgia, "Times New Roman", serif; font-weight: 400; letter-spacing: -.065em; }
+    .lead { margin: 0; max-width: 253px; color: #b2c6c4; font-size: 13px; line-height: 1.8; }
+    .section-divider { height: 1px; background: var(--line); margin: 39px 0 25px; }
+    .section-kicker { margin: 0 0 16px; font-size: 10px; font-weight: 760; letter-spacing: .2em; color: #c5d9d5; text-transform: uppercase; }
+    .section-n { color: var(--mint); margin-right: 8px; font-size: 10px; }
+    .modes { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; }
+    .mode { min-height: 70px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; border-radius: 10px; background: rgba(39,81,88,.18); border: 1px solid rgba(177,232,219,.11); color: #a9c3bf; font-size: 10px; transition: background .25s,border-color .25s,transform .25s,color .25s; }
+    .mode:hover { transform: translateY(-3px); background: rgba(61,112,118,.29); }
+    .mode[aria-pressed="true"] { border-color: rgba(126,238,210,.62); color: var(--mint2); background: rgba(58,139,136,.19); box-shadow: inset 0 0 18px rgba(54,155,142,.12); }
+    .mode svg { width: 20px; height: 20px; }
+    .toggles { display: grid; gap: 13px; }
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 12px; color: #d7e8df; }
+    .toggle-row .hint { display: block; font-size: 10px; color: var(--muted); margin-top: 3px; }
+    .switch { width: 37px; height: 21px; padding: 2px; background: #29434a; border: 1px solid #4a6a6a; border-radius: 99px; transition: background .25s; flex-shrink: 0; }
+    .switch::before { display: block; content: ""; width: 15px; height: 15px; background: #b0c1bb; border-radius: 50%; transition: transform .25s,background .25s; }
+    .switch[aria-pressed="true"] { background: #2e8079; border-color: #7be4ca; }
+    .switch[aria-pressed="true"]::before { transform: translateX(16px); background: #ebfff2; }
+    .sound-note { margin: 12px 0 0; font-size: 10px; line-height: 1.5; color: var(--muted); }
+    .left-bottom { margin-top: auto; padding-top: 30px; }
+    .field-mark { color: var(--mint); font-family: Georgia,serif; font-size: 47px; line-height: 1; opacity: .76; }
+    .field-quote { max-width: 230px; margin: 9px 0 13px; color: #bed2c9; font-family: Georgia,serif; font-style: italic; font-size: 17px; line-height: 1.45; }
+    .field-credit { color: #6f9997; font-size: 9px; letter-spacing: .16em; text-transform: uppercase; }
+    .viewport-col { min-width: 0; }
+    .aquarium { min-height: 590px; height: min(72vh,790px); position: relative; isolation: isolate; overflow: hidden; border-radius: var(--radius); border: 1px solid rgba(136,229,209,.29); background: radial-gradient(ellipse at 52% 45%,#195662,#0b3545 57%,#071c2b 94%); box-shadow: inset 0 0 0 1px rgba(202,255,237,.045),0 18px 72px rgba(0,10,18,.24),0 0 90px rgba(29,123,137,.085); }
+    .aquarium::after { content: ""; position: absolute; inset: 0; z-index: 4; pointer-events: none; border-radius: inherit; box-shadow: inset 0 0 74px 24px rgba(5,26,37,.3), inset 0 0 0 1px rgba(186,247,225,.05); }
+    .aquarium canvas { display: block; height: 100%; width: 100%; touch-action: none; }
+    .scene-hud { position: absolute; inset: 0; z-index: 5; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 24px; }
+    .hud-top { display: flex; align-items: start; justify-content: space-between; gap: 10px; }
+    .hud-badge { display: flex; flex-direction: column; gap: 6px; color: #e2faf0; text-shadow: 0 2px 16px rgba(0,18,20,.45); }
+    .hud-badge small { font-size: 9px; font-weight: 770; letter-spacing: .25em; color: #9dd9d2; }
+    .hud-badge strong { font-size: 16px; font-weight: 610; letter-spacing: .01em; }
+    .hud-icons { display: flex; align-items: center; gap: 7px; pointer-events: auto; }
+    .icon-button { width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid rgba(181,242,225,.33); border-radius: 9px; background: rgba(5,35,43,.5); color: #e0f9ef; backdrop-filter: blur(10px); transition: background .2s, transform .2s; }
+    .icon-button:hover { background: rgba(57,132,127,.6); transform: translateY(-2px); }
+    .icon-button svg { width: 16px; height: 16px; }
+    .hud-bottom { display: flex; align-items: end; justify-content: space-between; gap: 14px; }
+    .hud-instruction { max-width: 270px; display: flex; align-items: center; gap: 9px; color: #e0eee9; font-size: 11px; line-height: 1.4; text-shadow: 0 2px 8px #061b22; }
+    .hud-instruction svg { flex-shrink: 0; width: 21px; height: 21px; color: var(--mint); }
+    .depth-scale { width: 62px; display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 8px; color: #b7e2dc; font-size: 9px; font-weight: 730; letter-spacing: .1em; white-space: nowrap; }
+    .depth-scale i { height: 19px; width: 1px; background: rgba(165,226,218,.7); justify-self: end; box-shadow: -5px 0 rgba(165,226,218,.4); }
+    .loading { position: absolute; inset: 0; z-index: 8; background: radial-gradient(circle at 50% 42%,#155c68,#082736 77%); display: grid; place-items: center; text-align: center; transition: opacity .8s ease,visibility .8s ease; }
+    .loading.done { opacity: 0; visibility: hidden; }
+    .loader-ring { width: 66px; height: 66px; margin: 0 auto 24px; display: grid; place-items: center; border: 1px solid rgba(134,234,208,.25); border-radius: 50%; }
+    .loader-ring::before { content: ""; width: 42px; height: 42px; border: 1px solid #82dfc3; border-left-color: transparent; border-radius: 50%; animation: spin 1.5s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading strong { display: block; font-size: 17px; font-weight: 550; letter-spacing: .04em; }
+    .loading p { max-width: 240px; margin: 9px auto 0; color: #92bbb7; font-size: 11px; line-height: 1.6; }
+    .tooltip { position: absolute; z-index: 7; max-width: 174px; padding: 9px 12px; pointer-events: none; border: 1px solid rgba(142,242,209,.43); border-radius: 8px; color: #ebfff7; background: rgba(5,31,40,.86); backdrop-filter: blur(9px); font-size: 11px; transform: translate(12px,-36px); box-shadow: 0 8px 26px #071a2d88; opacity: 0; transition: opacity .18s; }
+    .tooltip.visible { opacity: 1; }
+    .tooltip small { display: block; margin-top: 4px; color: #a6cebf; }
+    .scene-bottom { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 15px; color: #93aaa7; font-size: 10px; font-weight: 660; letter-spacing: .12em; text-transform: uppercase; }
+    .scene-bottom span { display: inline-flex; align-items: center; gap: 9px; }
+    .scene-bottom strong { color: var(--mint); font-size: 12px; }
+    .scene-bottom .key { padding: 2px 6px; border: 1px solid rgba(175,229,217,.2); border-radius: 4px; color: #c1d6ce; font-size: 10px; }
+    .right { padding: 15px 0 0; }
+    .catalog-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 0 16px; border-bottom: 1px solid var(--line); }
+    .catalog-head h2 { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: .21em; font-weight: 750; }
+    .catalog-head span { color: var(--mint); font-size: 10px; font-weight: 750; }
+    .species-list { display: grid; gap: 3px; padding: 13px 0; }
+    .species { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 54px; padding: 7px 9px; border: 1px solid transparent; border-radius: 8px; background: transparent; text-align: left; transition: background .22s,border-color .22s,transform .22s; }
+    .species:hover { background: rgba(74,150,142,.15); transform: translateX(3px); }
+    .species[aria-pressed="true"] { border-color: rgba(120,226,195,.22); background: rgba(65,142,135,.18); }
+    .species-swatch { display: block; height: 29px; width: 43px; flex: 0 0 43px; filter: drop-shadow(0 3px 5px #03162088); }
+    .species-swatch svg { width: 100%; height: 100%; }
+    .species-name { display: block; font-size: 11px; font-weight: 700; letter-spacing: .005em; }
+    .species-latin { display: block; margin-top: 4px; color: #82a29c; font-size: 9px; font-style: italic; }
+    .species-arrow { margin-left: auto; color: #94cdbd; font-size: 15px; opacity: .5; }
+    .species[aria-pressed="true"] .species-arrow { opacity: 1; transform: rotate(-45deg); }
+    .profile { position: relative; margin-top: auto; padding: 18px 18px 17px; border: 1px solid rgba(132,224,204,.22); border-radius: 12px; background: linear-gradient(155deg,rgba(35,92,99,.34),rgba(14,51,59,.28)); overflow: hidden; }
+    .profile::after { content: ""; position: absolute; top: -46px; right: -48px; height: 148px; width: 148px; border-radius: 50%; background: radial-gradient(circle,rgba(120,234,201,.11),transparent 69%); pointer-events: none; }
+    .profile-tag { display: flex; align-items: center; gap: 8px; color: #a8d7c8; font-size: 9px; font-weight: 760; letter-spacing: .18em; text-transform: uppercase; }
+    .profile-tag::before { content: ""; width: 6px; height: 6px; background: var(--mint); border-radius: 50%; }
+    .profile h3 { margin: 15px 0 2px; font-weight: 650; font-size: 20px; letter-spacing: -.045em; }
+    .profile .latin { margin: 0; color: #b1cbc1; font: italic 11px Georgia,serif; }
+    .profile .description { min-height: 74px; margin: 16px 0 15px; color: #bfd3c9; font-size: 11px; line-height: 1.7; }
+    .profile-fact { padding-top: 13px; border-top: 1px solid var(--line); color: #a9cfc3; font-size: 10px; line-height: 1.5; }
+    .profile-fact strong { display: block; margin-bottom: 5px; color: var(--mint); font-size: 9px; letter-spacing: .13em; text-transform: uppercase; }
+    .action-bar { display: flex; gap: 9px; margin-top: 15px; }
+    .primary-button { display: inline-flex; justify-content: center; align-items: center; gap: 9px; flex: 1; min-height: 45px; border: 1px solid #a4efcf; border-radius: 9px; background: linear-gradient(110deg,#a9ebcd,#69cfb5); color: #0b3540; font-size: 12px; font-weight: 800; box-shadow: 0 7px 24px rgba(59,185,158,.15); transition: transform .22s,filter .22s; }
+    .primary-button:hover { transform: translateY(-2px); filter: brightness(1.09); }
+    .primary-button svg { width: 16px; height: 16px; }
+    .secondary-button { width: 45px; display: grid; place-items: center; border: 1px solid var(--line-bright); border-radius: 9px; background: rgba(36,87,90,.3); transition: background .2s; }
+    .secondary-button:hover { background: rgba(65,136,131,.4); }
+    .secondary-button svg { width: 17px; height: 17px; }
+    .footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 22px 0 28px; margin-top: 18px; border-top: 1px solid var(--line); color: #7eaaa3; font-size: 10px; letter-spacing: .07em; }
+    .footer a { color: #c4e9d8; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(185,233,209,.4); }
+    .footer .foot-center { color: #9fc9ba; letter-spacing: .18em; }
+    .modal { position: fixed; z-index: 50; inset: 0; display: none; padding: 20px; place-items: center; background: rgba(2,17,24,.72); backdrop-filter: blur(12px); }
+    .modal.open { display: grid; }
+    .modal-card { position: relative; width: min(100%,520px); max-height: min(85vh,700px); overflow: auto; padding: 33px; border: 1px solid rgba(177,242,219,.37); border-radius: 18px; background: linear-gradient(145deg,#173d47,#092732); box-shadow: 0 30px 100px #010e1cb0; }
+    .modal-close { position: absolute; top: 18px; right: 18px; width: 33px; height: 33px; border: 1px solid var(--line-bright); border-radius: 8px; background: rgba(151,213,202,.08); font-size: 20px; line-height: 1; }
+    .modal h2 { margin: 20px 0 8px; font-size: 31px; font-weight: 570; letter-spacing: -.06em; }
+    .modal p, .modal li { color: #bdcec7; font-size: 12px; line-height: 1.8; }
+    .modal ol { padding-left: 21px; }
+    .kbd { display: inline-block; min-width: 20px; padding: 1px 5px; border: 1px solid #5d9794; border-radius: 4px; font: 10px ui-monospace,monospace; text-align: center; color: #c8f0dd; }
+    .toast { position: fixed; z-index: 60; bottom: 29px; left: 50%; max-width: calc(100% - 35px); padding: 11px 16px; border: 1px solid rgba(150,232,206,.48); border-radius: 10px; color: #eafff3; background: rgba(5,43,51,.92); box-shadow: 0 12px 35px #03172088; font-size: 12px; text-align: center; transform: translate(-50%,24px); opacity: 0; pointer-events: none; transition: transform .28s,opacity .28s; }
+    .toast.visible { opacity: 1; transform: translate(-50%,0); }
+    [data-mode="night"] .aquarium { background: radial-gradient(ellipse at 50% 45%,#10404e,#061923 76%); }
+    [data-mode="sunset"] .aquarium { background: radial-gradient(ellipse at 53% 40%,#536363,#183d49 62%,#102632); }
+    @media (max-width: 1300px) {
+      .app { width: min(100% - 40px,1500px); }
+      .layout { grid-template-columns: minmax(185px,215px) minmax(0,1fr) minmax(195px,220px); gap: 16px; }
+      .left { padding-top: 20px; }
+      .aquarium { min-height: 530px; }
+      h1 { font-size: clamp(36px,3.7vw,51px); }
+      .profile { padding: 15px 13px; }
+    }
+    @media (max-width: 1060px) {
+      .layout { grid-template-columns: minmax(0,1fr) minmax(220px,270px); }
+      .left { grid-column: 1 / -1; padding: 10px 0 0; display: grid; grid-template-columns: minmax(205px,1fr) minmax(220px,1fr) minmax(170px,.7fr); align-items: center; gap: 18px; }
+      .intro h1 { margin: 12px 0 10px; font-size: 43px; }
+      .lead { max-width: 300px; font-size: 11px; }
+      .left .section-divider { display: none; }
+      .left .section-kicker { margin-bottom: 12px; }
+      .left-bottom { margin-top: 0; padding: 0 0 0 14px; border-left: 1px solid var(--line); }
+      .field-mark { font-size: 33px; }
+      .field-quote { margin: 5px 0; font-size: 14px; }
+      .right { padding-top: 0; }
+      .aquarium { min-height: 500px; height: min(66vh,670px); }
+      .top-center { display: none; }
+    }
+    @media (max-width: 740px) {
+      .app { width: min(100% - 24px,600px); }
+      .topbar { min-height: 69px; }
+      .brand-icon { height: 31px; width: 31px; }
+      .brand-icon svg { width: 18px; height: 18px; }
+      .brand-type { font-size: 16px; }
+      .brand-type small { font-size: 7px; }
+      .live-pill { padding: 8px 10px; font-size: 9px; }
+      .layout { display: flex; flex-direction: column; gap: 14px; padding-top: 14px; }
+      .viewport-col { order: 0; }
+      .left { order: 1; display: block; padding: 5px 0 0; }
+      .right { order: 2; }
+      .aquarium { height: min(66vh,560px); min-height: 360px; border-radius: 14px; }
+      .scene-hud { padding: 15px; }
+      .hud-badge strong { font-size: 13px; }
+      .hud-badge small { font-size: 8px; }
+      .hud-icons { gap: 5px; }
+      .icon-button { width: 32px; height: 32px; }
+      .scene-bottom { margin-top: 11px; font-size: 9px; }
+      .scene-bottom .desktop-key { display: none; }
+      .intro h1 { font-size: 38px; max-width: none; margin: 14px 0 7px; }
+      .intro h1 em { display: inline; }
+      .lead { max-width: 100%; font-size: 12px; }
+      .left .section-divider { display: block; margin: 22px 0 18px; }
+      .control-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+      .left-bottom { display: none; }
+      .right { margin-top: 7px; }
+      .species-list { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: thin; gap: 5px; padding: 11px 0 15px; }
+      .species { min-width: 166px; scroll-snap-align: start; }
+      .species-arrow { display: none; }
+      .profile { margin-top: 2px; }
+      .profile .description { min-height: 0; }
+      .footer { padding-top: 15px; font-size: 9px; }
+      .footer .foot-center { display: none; }
+    }
+    @media (max-width: 440px) {
+      .control-grid { grid-template-columns: 1fr; }
+      .toggles { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .toggle-row { font-size: 10px; }
+      .toggle-row .hint { font-size: 9px; }
+      .hud-instruction { font-size: 10px; max-width: 180px; }
+      .depth-scale { display: none; }
+      .aquarium { min-height: 340px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *,*::before,*::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+  <script type="importmap">
+    {"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}
+  </script>
+</head>
+<body data-mode="day">
+  <div class="app">
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="Pelagia, к началу страницы">
+        <span class="brand-icon" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M5 17c6-8 15-9 22 0-7 9-16 8-22 0Z" stroke="currentColor" stroke-width="1.7"/><path d="m8 14-5-4v14l5-5m6 3c2.3-2.2 3-5.7 1-10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="22" cy="15" r="1.1" fill="currentColor"/></svg></span>
+        <span class="brand-type">PELAGIA<small>THE LIVING REEF</small></span>
+      </a>
+      <div class="top-center">ОКНО В ПОДВОДНЫЙ МИР</div>
+      <span class="live-pill"><span class="live-dot" aria-hidden="true"></span><span>РИФ ЖИВЁТ</span></span>
+    </header>
+
+    <main id="top" class="layout">
+      <aside class="left" aria-label="Описание и настройки аквариума">
+        <div class="intro">
+          <p class="eyebrow">ВАШ ТИХИЙ УГОЛОК ОКЕАНА</p>
+          <h1>Здесь можно <em>замедлиться.</em></h1>
+          <p class="lead">Наблюдайте, как маленький риф живёт своей жизнью. Познакомьтесь с его обитателями, измените свет и просто побудьте у воды.</p>
+        </div>
+        <div class="section-divider"></div>
+        <div class="control-grid">
+          <section aria-labelledby="time-title">
+            <h2 class="section-kicker" id="time-title"><span class="section-n">01</span>ВРЕМЯ СУТОК</h2>
+            <div class="modes" role="group" aria-label="Освещение рифа">
+              <button class="mode" type="button" data-scene-mode="day" aria-pressed="true" title="Дневной свет"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path stroke-linecap="round" d="M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9 7 7m10 10 2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg><span>ДЕНЬ</span></button>
+              <button class="mode" type="button" data-scene-mode="sunset" aria-pressed="false" title="Закатный свет"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" d="M3 17h18M5 20h14M12 5v2m-7 3-2-2m16 2 2-2M7 17a5 5 0 1 1 10 0"/></svg><span>ЗАКАТ</span></button>
+              <button class="mode" type="button" data-scene-mode="night" aria-pressed="false" title="Ночной свет"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20 15.7A8.6 8.6 0 0 1 8.3 4 8.7 8.7 0 1 0 20 15.7Z"/><path d="m17 4 .45 1.55L19 6l-1.55.45L17 8l-.45-1.55L15 6l1.55-.45L17 4Z"/></svg><span>НОЧЬ</span></button>
+            </div>
+          </section>
+          <section aria-labelledby="settings-title">
+            <h2 class="section-kicker" id="settings-title"><span class="section-n">02</span>АТМОСФЕРА</h2>
+            <div class="toggles">
+              <div class="toggle-row"><span>Звуки океана<span class="hint">Включаются по нажатию</span></span><button id="sound-toggle" class="switch" type="button" role="switch" aria-label="Звуки океана" aria-checked="false" aria-pressed="false"></button></div>
+              <div class="toggle-row"><span>Поставить на паузу<span class="hint">Движение рыб и воды</span></span><button id="pause-toggle" class="switch" type="button" role="switch" aria-label="Пауза анимации" aria-checked="false" aria-pressed="false"></button></div>
+            </div>
+            <p class="sound-note">Звук синтезируется прямо в браузере. Запись или внешние аудиофайлы не используются.</p>
+          </section>
+        </div>
+        <div class="left-bottom" aria-hidden="true"><div class="field-mark">“</div><p class="field-quote">Море никогда не бывает абсолютно неподвижным.</p><span class="field-credit">ПОЛЕВЫЕ ЗАМЕТКИ · 001</span></div>
+      </aside>
+
+      <section class="viewport-col" aria-label="Интерактивный трёхмерный аквариум">
+        <div id="aquarium" class="aquarium" tabindex="0" aria-label="3D-аквариум: перетаскивайте для обзора; выбирайте рыб нажатием">
+          <div class="loading" id="loading" role="status"><div><div class="loader-ring" aria-hidden="true"></div><strong>Риф просыпается...</strong><p>Загружаем Three.js и создаём мир. Для первого открытия нужен интернет.</p></div></div>
+          <div class="scene-hud">
+            <div class="hud-top">
+              <div class="hud-badge"><small>PELAGIA / ПОДВОДНАЯ ОБСЕРВАТОРИЯ</small><strong>Рифовая лагуна <span aria-hidden="true">↗</span></strong></div>
+              <div class="hud-icons">
+                <button type="button" class="icon-button" id="reset-view" aria-label="Вернуть исходный вид" title="Вернуть исходный вид"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/><circle cx="12" cy="12" r="2.2"/></svg></button>
+                <button type="button" class="icon-button" id="save-photo" aria-label="Сохранить снимок аквариума" title="Сохранить снимок"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7h4l2-2h6l2 2h4v12H3V7Z"/><circle cx="12" cy="13" r="3.2"/></svg></button>
+                <button type="button" class="icon-button" id="show-help" aria-label="Как пользоваться аквариумом" title="Помощь"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M9.8 9a2.35 2.35 0 1 1 3.8 2c-1.2.9-1.6 1.45-1.6 2.8m0 3.1v.2"/></svg></button>
+              </div>
+            </div>
+            <div class="hud-bottom">
+              <span class="hud-instruction"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M9 12V4a1.5 1.5 0 0 1 3 0v6-4a1.5 1.5 0 0 1 3 0v4-2a1.5 1.5 0 0 1 3 0v3a1.5 1.5 0 0 1 3 0v4c0 4-2.5 6-6 6h-2c-2 0-3-1-4-2l-5-5a1.7 1.7 0 0 1 2.4-2.4L9 14"/></svg>Потяните, чтобы осмотреть риф. Коснитесь рыбы, чтобы узнать её историю.</span>
+              <span class="depth-scale" aria-hidden="true"><i></i>12 М</span>
+            </div>
+          </div>
+          <div id="fish-tooltip" class="tooltip" aria-hidden="true"></div>
+        </div>
+        <div class="scene-bottom"><span><span class="status-dot" aria-hidden="true"></span> ЖИВЫХ ОБИТАТЕЛЕЙ: <strong id="fish-count">00</strong></span><span class="desktop-key">ПРОБЕЛ <span class="key">SPACE</span> ПАУЗА</span><span>3D × THREE.JS</span></div>
+      </section>
+
+      <aside class="right" aria-label="Обитатели рифа">
+        <div class="catalog-head"><h2>ОБИТАТЕЛИ РИФА</h2><span id="species-count">07 ВИДОВ</span></div>
+        <div id="species-list" class="species-list" role="group" aria-label="Выберите вид рыбы"></div>
+        <section class="profile" aria-live="polite" aria-atomic="true"><span class="profile-tag">ПОЛЕВОЙ СПРАВОЧНИК</span><h3 id="profile-name">Голубой хирург</h3><p id="profile-latin" class="latin">Paracanthurus hepatus</p><p id="profile-description" class="description">Яркий обитатель рифа. Плывёт, постоянно меняя направление среди кораллов, и любит держаться рядом со своими.</p><div class="profile-fact"><strong>ЛЮБОПЫТНЫЙ ФАКТ</strong><span id="profile-fact">У рыбы-хирурга есть острые шипы у основания хвоста. Они помогают ей защищаться.</span></div></section>
+        <div class="action-bar"><button id="feed-button" type="button" class="primary-button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m-4-4 4 4 4-4M5 17h14v3H5z"/><path d="m7 5 .01 0m10 1 .01 0" stroke-width="2.5"/></svg>Покормить рыб</button><button type="button" class="secondary-button" id="random-button" aria-label="Познакомиться со случайной рыбой" title="Случайный обитатель"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7h2c6 0 6 10 12 10h2m-3-3 3 3-3 3M4 17h2c2.6 0 4-1.8 5.3-4M14 8c1-1 2.1-1 4-1h2m-3-3 3 3-3 3"/></svg></button></div>
+      </aside>
+    </main>
+    <footer class="footer"><span>© PELAGIA · СОЗДАНО ДЛЯ ТИХИХ МИНУТ</span><span class="foot-center">✦ &nbsp; НАРИСОВАНО КОДОМ, НЕ КАРТИНКОЙ &nbsp; ✦</span><span>РАБОТАЕТ В СОВРЕМЕННОМ БРАУЗЕРЕ · <a href="https://threejs.org/" target="_blank" rel="noopener noreferrer">THREE.JS</a></span></footer>
+  </div>
+  <div id="help-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="help-title" aria-hidden="true"><div class="modal-card"><button type="button" class="modal-close" id="close-help" aria-label="Закрыть">×</button><p class="eyebrow">ПОСМОТРИТЕ ПОБЛИЖЕ</p><h2 id="help-title">Как устроен риф</h2><p>Здесь нет готовых изображений рыб или кораллов: всё вокруг собрано из геометрии и анимируется прямо у вас на экране.</p><ol><li>Перетаскивайте аквариум мышью или пальцем, чтобы повернуть обзор. Колёсико мыши приближает и отдаляет.</li><li>Нажмите на рыбу или выберите вид справа, чтобы открыть запись о нём.</li><li>Кнопка «Покормить рыб» добавляет корм: рыбы меняют курс и подплывают к нему.</li><li>Меняйте время суток, включайте звук, останавливайте движение или сохраняйте снимок.</li><li><span class="kbd">Пробел</span> включает паузу, <span class="kbd">F</span> кормит рыб, <span class="kbd">R</span> возвращает камеру, <span class="kbd">Esc</span> закрывает эту справку.</li></ol><p>Для загрузки библиотеки Three.js нужен интернет. Звук начинается только после вашего нажатия.</p></div></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    /*
+      PELAGIA / LIVING REEF
+      ---------------------------------------------------------------
+      The entire experience lives in this document. There are no image,
+      font, audio, model, shader, or texture files. Three.js and its
+      OrbitControls add-on are the only external dependencies. The scene
+      uses seeded procedural geometry, GPU shaders for water and sand,
+      CPU-driven boids, instanced bubbles, and optional Web Audio.
+
+      Coordinate convention: X runs left/right along the tank, Y is up,
+      Z points toward the viewer. A fish's local +X axis is its forward
+      direction. The tank inner limits are approximately X ±8.2,
+      Y [-4.55,+4.2], Z ±4.0. Fish steer inside a smaller safe volume.
+
+      Fish can be safely added to SPECIES below: createBody() paints its
+      body from the supplied palette. Set special = 'clown', 'butterfly',
+      'cardinal', or 'neon' for distinctive bars and highlights. Larger
+      species can use the tall silhouette; smaller schooling fish can use
+      small. Each entry needs a unique id and descriptive accessible text.
+    */
+    const $ = (selector, root=document) => root.querySelector(selector);
+    const $$ = (selector, root=document) => [...root.querySelectorAll(selector)];
+    const tank = $('#aquarium');
+    const loading = $('#loading');
+    const tooltip = $('#fish-tooltip');
+    const toastEl = $('#toast');
+    const countEl = $('#fish-count');
+    const speciesEl = $('#species-list');
+    const profileEls = {
+      name: $('#profile-name'), latin: $('#profile-latin'),
+      description: $('#profile-description'), fact: $('#profile-fact')
+    };
+    const TAU = Math.PI * 2;
+    const clamp = THREE.MathUtils.clamp;
+    const lerp = THREE.MathUtils.lerp;
+    const easeAngle = (a,b,t) => a + Math.atan2(Math.sin(b-a),Math.cos(b-a))*t;
+    let seed = 42091;
+    function random() { seed = (Math.imul(seed,1664525)+1013904223)|0; return (seed>>>0)/4294967296; }
+    function range(a,b) { return a+(b-a)*random(); }
+    function pick(values) { return values[Math.floor(random()*values.length)]; }
+    function col(hex) { return new THREE.Color(hex); }
+    function lineMaterial(hex, opacity=1) { return new THREE.LineBasicMaterial({color:hex,transparent:opacity<1,opacity,depthWrite:false}); }
+    function standard(hex, roughness=.65, metalness=0) { return new THREE.MeshStandardMaterial({color:hex,roughness,metalness}); }
+    function mesh(geometry,material,parent,x=0,y=0,z=0) { const m=new THREE.Mesh(geometry,material); m.position.set(x,y,z); parent.add(m); return m; }
+    function ball(parent,r,color,x,y,z,detail=10) { return mesh(new THREE.SphereGeometry(r,detail,Math.max(6,detail>>1)),color,parent,x,y,z); }
+    const SPHERE = new THREE.SphereGeometry(1,12,8);
+    const SMALL_SPHERE = new THREE.SphereGeometry(1,7,5);
+
+    const SPECIES = [
+      {id:'surgeon',name:'Голубой хирург',latin:'Paracanthurus hepatus',color:'#357cda',second:'#ffe07e',fin:'#122f7c',eye:'#091826',count:5,scale:[.67,.82],height:.79,width:.37,speed:[.84,1.14],depth:[-2.7,2.6],
+        description:'Маленький исследователь воды: то скроется за кораллом, то вспыхнет ярко-синим в полосе света. Обычно держится неподалёку от соседей.',fact:'У основания хвоста скрываются острые шипы. Благодаря им рыба-хирург может защитить себя, когда чувствует опасность.',school:1},
+      {id:'clown',name:'Рыба-клоун',latin:'Amphiprion ocellaris',color:'#ff943d',second:'#fff7dc',fin:'#a94120',eye:'#20172a',count:5,scale:[.48,.62],height:.69,width:.43,speed:[.72,1.02],depth:[-1.5,3.0],special:'clown',
+        description:'Небольшая полосатая рыба с очень узнаваемой окраской. В природе она живёт среди щупалец актинии, где находит укрытие.',fact:'Защитный слой слизи помогает рыбе-клоуну не обжигаться о щупальца своей актинии.',school:1},
+      {id:'butterfly',name:'Рыба-бабочка',latin:'Chaetodon auriga',color:'#ffdf89',second:'#f4f0d8',fin:'#f5b849',eye:'#211c21',count:3,scale:[.7,.88],height:.95,width:.27,speed:[.57,.83],depth:[-3.2,2.1],special:'butterfly',tall:1,
+        description:'Рыба-бабочка будто нарисована на воде: тонкое тело, высокий плавник и чёткие контрастные отметины. Она исследует каждый изгиб рифа.',fact:'Многие рыбы-бабочки питаются крошечными беспозвоночными, живущими рядом с кораллами.',school:0},
+      {id:'anthias',name:'Рифовая антиас',latin:'Pseudanthias squamipinnis',color:'#ff8b87',second:'#ffc493',fin:'#d5537b',eye:'#172633',count:6,scale:[.44,.59],height:.52,width:.31,speed:[1.05,1.48],depth:[-3.0,2.9],
+        description:'Стайка светящихся коралловых искр. Антиасы редко стоят на месте и оживляют пространство над рифом.',fact:'Антиасы часто собираются в многочисленные стайки рядом с богатым жизнью рифом.',school:1},
+      {id:'neon',name:'Неоновая хромис',latin:'Chromis viridis',color:'#74e5d2',second:'#9cf7ee',fin:'#379eab',eye:'#152537',count:7,scale:[.36,.46],height:.49,width:.28,speed:[1.0,1.36],depth:[-3.3,3.1],special:'neon',
+        description:'Серебристо-бирюзовая вспышка среди ветвей коралла. Хромисы движутся вместе, будто их связала невидимая нить.',fact:'Днём зелёные хромисы держатся группой, а ночью прячутся среди ветвей кораллов.',school:1},
+      {id:'angel',name:'Морской ангел',latin:'Centropyge loricula',color:'#bd83d7',second:'#ffd48d',fin:'#734eaf',eye:'#14202d',count:3,scale:[.68,.84],height:.99,width:.34,speed:[.61,.8],depth:[-2.9,1.9],tall:1,
+        description:'Тихий одиночка с почти театральными плавниками. Не спеша проходит над песком и заглядывает в гроты.',fact:'Карликовые морские ангелы осматривают поверхности рифа в поисках пищи.',school:0},
+      {id:'cardinal',name:'Кардинал',latin:'Pterapogon kauderni',color:'#c6d6d0',second:'#1b3d49',fin:'#dde3d1',eye:'#0e1c25',count:3,scale:[.44,.56],height:.66,width:.28,speed:[.56,.75],depth:[-2.8,2.4],special:'cardinal',
+        description:'Спокойный наблюдатель. Контрастные полосы и почти прозрачные плавники делают его похожим на маленький подводный флажок.',fact:'У некоторых видов рыб-кардиналов самец охраняет икру, вынашивая её во рту.',school:0}
+    ];
+    const speciesById = new Map(SPECIES.map(s=>[s.id,s]));
+
+    /* Render setup: restrained exposure keeps the pale UI and reef from
+       washing out. Antialiasing and capped pixel ratio suit laptops and
+       high-density phones without drawing more than ~1.8x device pixels. */
+    const renderer = new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance',preserveDrawingBuffer:true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.8));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.55;
+    renderer.setClearColor(0x071e2b,1);
+    renderer.setSize(tank.clientWidth,tank.clientHeight,false);
+    tank.prepend(renderer.domElement);
+    const scene = new THREE.Scene();
+    scene.background = col('#092d39');
+    scene.fog = new THREE.FogExp2(0x103945,.011);
+    const camera = new THREE.PerspectiveCamera(39,Math.max(1,tank.clientWidth)/Math.max(1,tank.clientHeight),.1,180);
+    camera.position.set(0,2.35,24.5);
+    camera.lookAt(0,-.25,0);
+    const controls = new OrbitControls(camera,renderer.domElement);
+    controls.target.set(0,-.25,0);
+    controls.enableDamping = true;
+    controls.dampingFactor = .07;
+    controls.enablePan = false;
+    controls.minDistance = 15;
+    controls.maxDistance = 34;
+    controls.minPolarAngle = .98;
+    controls.maxPolarAngle = 1.85;
+    controls.minAzimuthAngle = -.51;
+    controls.maxAzimuthAngle = .51;
+    controls.update();
+    const ambient = new THREE.HemisphereLight(0xa7f5e6,0x28515c,2.15);
+    scene.add(ambient);
+    const sunlight = new THREE.DirectionalLight(0xe7ffed,2.5);
+    sunlight.position.set(-4,11,7);
+    scene.add(sunlight);
+    const tealFill = new THREE.PointLight(0x38dcd7,85,19,2);
+    tealFill.position.set(5,0,4);
+    scene.add(tealFill);
+    const roseFill = new THREE.PointLight(0xffae8b,30,15,2);
+    roseFill.position.set(-5,-2,-1);
+    scene.add(roseFill);
+    const moonFill = new THREE.PointLight(0x77d9f1,0,19,2);
+    moonFill.position.set(2,4,3);
+    scene.add(moonFill);
+
+    /* Water is a gradient shader rather than a literal opaque box. Every
+       animated stripe is computed in the fragment shader, so all surfaces
+       stay perfectly crisp even when the camera or viewport is resized. */
+    const backdropUniforms = {uTime:{value:0},uNight:{value:0},uWarm:{value:0}};
+    const backMaterial = new THREE.ShaderMaterial({uniforms:backdropUniforms,side:THREE.DoubleSide,depthWrite:true,
+      vertexShader:`varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+      fragmentShader:`precision mediump float;
+        varying vec2 vUv; uniform float uTime; uniform float uNight; uniform float uWarm;
+        float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+        float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);
+          return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y);}
+        void main(){
+          vec2 uv=vUv;
+          vec3 deep=vec3(.012,.105,.147);
+          vec3 turquoise=vec3(.038,.32,.36);
+          vec3 top=vec3(.11,.52,.53);
+          vec3 base=mix(deep,turquoise,smoothstep(.02,.95,uv.y)*.75);
+          base=mix(base,top,pow(uv.y,3.1)*.53);
+          float w1=sin(uv.x*16.0+sin(uv.y*13.0+uTime*.3)*1.2+uTime*.36);
+          float w2=sin(uv.x*28.0-uv.y*5.0-uTime*.26);
+          float beam=pow(max(0.,w1*.62+w2*.27+.04),3.0)*smoothstep(.12,1.,uv.y);
+          float grain=noise(uv*vec2(19.,11.)+vec2(uTime*.008,0.))* .036;
+          float vignette=1.0-smoothstep(.27,.88,length((uv-.5)*vec2(1.25,1.)))*.27;
+          base=(base+vec3(.16,.36,.29)*beam+grain)*vignette;
+          base=mix(base,base*vec3(1.6,1.03,.81),uWarm*.47);
+          base=mix(base,base*vec3(.19,.42,.62)+vec3(.001,.022,.055),uNight*.84);
+          gl_FragColor=vec4(base,1.);
+        }`});
+    mesh(new THREE.PlaneGeometry(19.2,11.3),backMaterial,scene,0,.08,-4.82);
+    const floorUniforms={uTime:{value:0},uNight:{value:0},uWarm:{value:0}};
+    const sandMaterial=new THREE.ShaderMaterial({uniforms:floorUniforms,side:THREE.DoubleSide,
+      vertexShader:`varying vec2 vUv; varying vec3 vPos;void main(){vUv=uv;vPos=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+      fragmentShader:`precision mediump float;varying vec2 vUv; varying vec3 vPos;
+        uniform float uTime;uniform float uNight;uniform float uWarm;
+        float h(vec2 p){return fract(sin(dot(p,vec2(39.346,11.135)))*47758.74);}
+        void main(){
+          vec2 uv=vUv;
+          float a=sin(uv.x*67.+sin(uv.y*27.+uTime*.53)*3.1+uTime*.91);
+          float b=sin(uv.y*47.-uv.x*13.+sin(uv.x*24.-uTime*.41)*2.5-uTime*.65);
+          float c=pow(max(0.,a*b),5.)*.32;
+          float ripple=sin(uv.y*105.+uv.x*16.)*.009;
+          float speck=h(floor(uv*vec2(320.,170.)))*.085;
+          float fade=.66+.34*uv.y;
+          vec3 sand=vec3(.32,.41,.35)*fade+vec3(c*.57,c*.73,c*.6)+vec3(speck+ripple);
+          sand=mix(sand,sand*vec3(1.28,.91,.74),uWarm*.48);
+          sand=mix(sand,sand*vec3(.24,.45,.59)+vec3(.005,.018,.03),uNight*.85);
+          gl_FragColor=vec4(sand,1.);
+        }`});
+    const seabed=mesh(new THREE.PlaneGeometry(18.9,9.6,50,24),sandMaterial,scene,0,-4.67,.15);
+    seabed.rotation.x=-Math.PI/2;
+    const moundGeo=new THREE.SphereGeometry(1,16,8);
+    for(let i=0;i<28;i++){
+      const x=range(-8.1,8.1),z=range(-3.9,3.8),s=range(.24,.83);
+      const hill=mesh(moundGeo,standard(pick(['#546c63','#668174','#7c9180','#405e5c']),.93),scene,x,-4.7,z);
+      hill.scale.set(s*range(.9,1.8),s*.11,s*range(.5,1.3));
+    }
+    const waterTop=mesh(new THREE.PlaneGeometry(18.8,9.4),new THREE.MeshBasicMaterial({color:0x84dcd2,transparent:true,opacity:.19,side:THREE.DoubleSide,depthWrite:false}),scene,0,4.62,0);
+    waterTop.rotation.x=-Math.PI/2;
+    const upperGlow=mesh(new THREE.PlaneGeometry(17.9,8.8),new THREE.MeshBasicMaterial({color:0xd8f5da,transparent:true,opacity:.04,side:THREE.DoubleSide,depthWrite:false}),scene,0,4.67,0);
+    upperGlow.rotation.x=-Math.PI/2;
+
+    /* The glass is intentionally subtle. Opaque simulated glass would
+       hide the inhabitants. This frame also helps the 3D space read as
+       an aquarium rather than an illustration pasted behind the UI. */
+    const glass=new THREE.MeshBasicMaterial({color:0xa4efe7,transparent:true,opacity:.033,depthWrite:false,side:THREE.DoubleSide});
+    mesh(new THREE.PlaneGeometry(18.4,9.3),glass,scene,0,.01,4.51);
+    const edgeGeo=new THREE.EdgesGeometry(new THREE.BoxGeometry(18.4,9.3,9));
+    const edges=new THREE.LineSegments(edgeGeo,lineMaterial(0x90e8dd,.18));
+    edges.position.y=.01;
+    scene.add(edges);
+    const rimMat=new THREE.MeshStandardMaterial({color:0x79b8b4,metalness:.78,roughness:.29,transparent:true,opacity:.55});
+    for(const y of [-4.64,4.66]) for(const z of [-4.5,4.5]){
+      const rim=mesh(new THREE.CylinderGeometry(.022,.022,18.4,5),rimMat,scene,0,y,z);
+      rim.rotation.z=Math.PI/2;
+    }
+    for(const x of [-9.2,9.2]) for(const z of [-4.5,4.5]) mesh(new THREE.CylinderGeometry(.024,.024,9.3,5),rimMat,scene,x,.01,z);
+    const gleam=mesh(new THREE.PlaneGeometry(.024,8.8),new THREE.MeshBasicMaterial({color:0xd5fff0,transparent:true,opacity:.23,depthWrite:false}),scene,-8.99,0,4.53);
+    gleam.rotation.z=.017;
+
+    /* Volumetric-looking shafts made from translucent geometry. The
+       three back-of-tank shafts catch coral silhouettes without washing
+       out the main swimming area. */
+    const beams=[];
+    for(const [x,z,s,opacity] of [[-4.6,-2.5,1.3,.048],[1.0,-3.5,1.6,.064],[5.9,-2.8,1.1,.045]]){
+      const beam=mesh(new THREE.CylinderGeometry(.07,s,10.3,16,1,true),new THREE.MeshBasicMaterial({color:0xd6fff0,transparent:true,opacity,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending}),scene,x,-.45,z);
+      beam.rotation.z=range(-.14,.14); beams.push(beam);
+    }
+    const halo=mesh(new THREE.SphereGeometry(2.2,24,12),new THREE.MeshBasicMaterial({color:0x66e8df,transparent:true,opacity:.016,depthWrite:false,side:THREE.BackSide}),scene,0,1.0,-3);
+    halo.scale.set(3,1.45,1);
+
+    /* Rocks have a reproducible, hand-picked silhouette. Vertices are
+       distorted in place for facets that resemble weathered stone. */
+    const rockMats=['#315962','#3b6262','#426a67','#4b6d68','#506969','#657a6e'].map(h=>standard(h,.96,.02));
+    function rockGeometry(){
+      const g=new THREE.DodecahedronGeometry(1,1);
+      const p=g.attributes.position;
+      const fx=range(.76,1.13),fz=range(.72,1.29);
+      for(let i=0;i<p.count;i++){
+        const v=new THREE.Vector3().fromBufferAttribute(p,i);
+        const n=1+Math.sin(v.x*7.1+v.y*11.5+v.z*4.9)*.052;
+        p.setXYZ(i,v.x*fx*n,v.y*(.78+Math.sin(v.x*3)*.045)*n,v.z*fz*n);
+      }
+      g.computeVertexNormals();return g;
+    }
+    const rockPositions=[[-6.7,-4.37,-2.9,1.5],[-5.15,-4.38,-3.7,1.23],[-3.5,-4.42,-3.1,1.08],[2.7,-4.4,-3.7,1.32],[4.6,-4.37,-3.4,1.65],[6.5,-4.36,-3.1,1.55],[-7.3,-4.48,.25,.67],[-5.9,-4.48,1.18,.6],[-2.2,-4.51,1.1,.49],[1.2,-4.49,.98,.6],[3.8,-4.47,1.65,.7],[6.2,-4.42,1.4,.67],[.1,-4.38,-3.5,1.02],[7.5,-4.44,-.6,.65]];
+    for(const [x,y,z,s] of rockPositions){
+      const r=mesh(rockGeometry(),pick(rockMats),scene,x,y+s*.33,z);
+      r.scale.set(s,s*range(.58,.86),s*range(.8,1.1));
+      r.rotation.set(range(-.18,.18),range(0,TAU),range(-.2,.2));
+      for(let n=0;n<2;n++){
+        const pebble=mesh(new THREE.IcosahedronGeometry(1,0),pick(rockMats),scene,x+range(-s*1.15,s*1.15),-4.53,z+range(-s*1.05,s*1.05));
+        pebble.scale.set(range(.09,.2),range(.06,.12),range(.08,.16));
+      }
+    }
+    const shellMaterials=['#e5b79a','#e3cfad','#c4d3be','#da9d83'].map(c=>standard(c,.82));
+    function seashell(x,z,r=.22){
+      const group=new THREE.Group();group.position.set(x,-4.53,z);scene.add(group);
+      const g=new THREE.SphereGeometry(1,16,8,0,Math.PI);
+      const m=mesh(g,pick(shellMaterials),group,0,.11,0);
+      m.scale.set(r,r*.7,r*.77);m.rotation.set(-Math.PI/2,range(0,TAU),0);
+      for(let i=0;i<5;i++){
+        const stripe=mesh(new THREE.TorusGeometry(r*(.25+i*.1),.008,3,20,Math.PI),new THREE.MeshBasicMaterial({color:0xfce0bb,transparent:true,opacity:.32}),group,0,.11+i*.012,0);
+        stripe.rotation.x=Math.PI/2;
+      }
+      return group;
+    }
+    for(let i=0;i<18;i++)seashell(range(-7.8,7.8),range(-2.6,3.8),range(.12,.3));
+
+    /* Branching staghorn coral. Separate color families make natural
+       clusters; tips catch extra light while the bases stay in shade. */
+    const coralPalettes=[
+      ['#d86e77','#ffb094','#ffe1a8'],
+      ['#925cb1','#c58bd0','#e7bce6'],
+      ['#dd8e68','#f6bd78','#ffe1aa'],
+      ['#48a9a5','#7bd4b4','#d8e4ab'],
+      ['#cf7596','#fa9fb1','#ffcdba']
+    ];
+    const swaying=[];
+    function tube(points,r,material,parent,segments=9){
+      const curve=new THREE.CatmullRomCurve3(points);
+      return mesh(new THREE.TubeGeometry(curve,Math.max(segments,points.length*3),r,5,false),material,parent);
+    }
+    function branchCoral(x,z,height,paletteIndex,branchCount=8){
+      const palette=coralPalettes[paletteIndex%coralPalettes.length];
+      const group=new THREE.Group();group.position.set(x,-4.4,z);scene.add(group);
+      const baseMat=standard(palette[0],.85), branchMat=standard(palette[1],.78),tipMat=standard(palette[2],.72);
+      const trunk=[new THREE.Vector3(0,0,0),new THREE.Vector3(.03,height*.35,.02),new THREE.Vector3(.04,height*.75,0)];
+      tube(trunk,.13,baseMat,group);
+      for(let i=0;i<branchCount;i++){
+        const start=range(.23,.7)*height;
+        const angle=(i/branchCount)*TAU+range(-.3,.3);
+        const length=height*range(.32,.72);
+        const spread=range(.34,.75);
+        const topY=Math.min(height*1.24,start+length);
+        const end=new THREE.Vector3(Math.cos(angle)*spread,topY,Math.sin(angle)*spread);
+        const mid=new THREE.Vector3(end.x*.48,(start+topY)*.56,end.z*.48);
+        tube([new THREE.Vector3(0,start,0),mid,end],range(.036,.073),branchMat,group);
+        ball(group,range(.07,.13),tipMat,end.x,end.y,end.z,7);
+        if(i%2===0){
+          const twigEnd=new THREE.Vector3(end.x+Math.cos(angle+.8)*.23,end.y+range(.14,.35),end.z+Math.sin(angle+.8)*.22);
+          tube([mid.clone().lerp(end,.3),end.clone().lerp(twigEnd,.43),twigEnd],.026,branchMat,group,7);
+          ball(group,.055,tipMat,twigEnd.x,twigEnd.y,twigEnd.z,6);
+        }
+      }
+      ball(group,.13,tipMat,.04,height*.75,0,8);
+      swaying.push({group,phase:range(0,TAU),amount:range(.007,.017)});
+      return group;
+    }
+    branchCoral(-6.7,-3,2.5,0,11);branchCoral(-5.7,-2.8,1.65,0,8);
+    branchCoral(-3.35,-3.6,2.04,1,9);branchCoral(-2.5,-3.15,1.25,1,7);
+    branchCoral(2.1,-3.4,1.74,3,10);branchCoral(3.05,-3.36,2.4,4,12);
+    branchCoral(5.4,-3,2.72,2,11);branchCoral(6.6,-3,1.6,2,8);
+    branchCoral(7,-.65,.95,1,6);branchCoral(-7.05,-.2,1.0,3,7);
+    branchCoral(.4,-4,1.48,4,7);branchCoral(-1.35,-3.8,.85,2,6);
+
+    /* Plate coral grows in overlapping ellipses with concentric ridges.
+       Each plate is an independent mesh, tilted to expose the sculpture. */
+    function plateCoral(x,z,base,colors){
+      const group=new THREE.Group();group.position.set(x,-4.36,z);scene.add(group);
+      const main=standard(colors[0],.77),ridge=new THREE.MeshStandardMaterial({color:colors[1],roughness:.82,side:THREE.DoubleSide});
+      for(let i=0;i<4;i++){
+        const size=base*(.53+i*.2),y=.18+i*.23;
+        const plate=mesh(new THREE.CylinderGeometry(size,size*.81,.08,32,1),main,group,(i-1.5)*.1,y,0);
+        plate.scale.z=range(.64,.85);plate.rotation.z=(i%2?1:-1)*range(.035,.15);
+        for(let ring=1;ring<=3;ring++){
+          const tor=mesh(new THREE.TorusGeometry(size*(.37+ring*.17),.008,3,40),ridge,group,(i-1.5)*.1,y+.05,0);
+          tor.rotation.x=Math.PI/2;tor.scale.y=plate.scale.z;
+        }
+      }
+      return group;
+    }
+    plateCoral(-4.75,-2.0,.62,['#c58c6a','#ffcea0']);
+    plateCoral(4.1,-2.3,.7,['#8b74af','#dbafdb']);
+    plateCoral(1.5,-2.7,.53,['#be887d','#e6bea0']);
+
+    /* Brain coral uses latitude stripes over a squashed sphere. Its
+       repeated surface detail stays inexpensive and reads from afar. */
+    function brainCoral(x,z,s=.78){
+      const group=new THREE.Group();group.position.set(x,-4.48,z);scene.add(group);
+      const dome=mesh(new THREE.SphereGeometry(1,24,14,0,TAU,0,Math.PI*.53),standard('#a2b781',.92),group,0,.07,0);
+      dome.scale.set(s,s*.68,s*.9);dome.rotation.x=Math.PI;
+      for(let i=0;i<9;i++){
+        const a=(i/9)*TAU;
+        const points=[];
+        for(let j=0;j<10;j++){
+          const t=j/9;
+          const theta=a+Math.sin(t*TAU*2+i)*.18;
+          const radius=s*(.27+t*.55);
+          points.push(new THREE.Vector3(Math.cos(theta)*radius,.13+Math.sin(t*Math.PI)*s*.6,Math.sin(theta)*radius*.9));
+        }
+        tube(points,.018,standard(i%2?'#718f73':'#d0ca99',.9),group,16);
+      }
+    }
+    brainCoral(4.8,.2,.67);brainCoral(-1.6,-2.0,.56);
+    brainCoral(6.35,-1.65,.54);
+
+    /* Fan corals are hand-shaped meshes and fine, branching veins. They
+       sit behind the fish and supply a different, delicate silhouette. */
+    function seaFan(x,z,s,colorHex){
+      const group=new THREE.Group();group.position.set(x,-4.44,z);scene.add(group);
+      const material=new THREE.MeshStandardMaterial({color:colorHex,roughness:.85,side:THREE.DoubleSide,transparent:true,opacity:.82});
+      const stemMat=standard(colorHex,.87);
+      tube([new THREE.Vector3(0,0,0),new THREE.Vector3(0,s*.35,0),new THREE.Vector3(0,s*.71,0)],.035,stemMat,group);
+      for(let i=-5;i<=5;i++){
+        const t=i/5;
+        const endY=s*(.68+.26*(1-Math.abs(t)));
+        const endX=t*s*.61;
+        const arch=[new THREE.Vector3(0,s*.31,0),new THREE.Vector3(endX*.45,s*.58,0),new THREE.Vector3(endX,endY,0)];
+        tube(arch,.012+(1-Math.abs(t))*.009,stemMat,group,13);
+        for(let j=1;j<=3;j++){
+          const u=j/4;
+          tube([new THREE.Vector3(endX*u,s*(.35+.4*u),0),new THREE.Vector3(endX*u+Math.sign(t||1)*s*.08,s*(.45+.37*u),0)],.007,material,group,6);
+        }
+      }
+      swaying.push({group,phase:range(0,TAU),amount:.014});
+    }
+    seaFan(-7.25,-3.55,2.35,'#e09a9f');
+    seaFan(6.9,-3.55,1.92,'#d9a0c0');
+    seaFan(1.0,-4.0,1.46,'#a0d7b4');
+
+    /* Kelp leaves are custom double-sided curved ribbons. Their sway
+       comes from rotating the parent group, keeping the vertex data
+       stable; no geometry allocations occur during animation. */
+    const leafMats=['#4a9c85','#67b690','#86b595','#389383','#90bd9b'].map(c=>new THREE.MeshStandardMaterial({color:c,side:THREE.DoubleSide,transparent:true,opacity:.89,roughness:.75}));
+    const kelpGroups=[];
+    function ribbon(length,width,bend,mat){
+      const positions=[],indices=[];
+      const segments=10;
+      for(let i=0;i<=segments;i++){
+        const t=i/segments;
+        const taper=Math.pow(Math.max(.01,Math.sin(Math.PI*t)),.7);
+        const centerX=Math.sin(t*2.6+bend)*.14*t + bend*t*.14;
+        const z=Math.sin(t*4.5+bend)*.11*t;
+        for(const side of [-1,1]) positions.push(centerX+side*width*taper*.5,length*t,z+side*.022*Math.sin(t*TAU));
+        if(i<segments){const n=i*2;indices.push(n,n+1,n+2,n+1,n+3,n+2);}
+      }
+      const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));g.setIndex(indices);g.computeVertexNormals();return new THREE.Mesh(g,mat);
+    }
+    function kelpPatch(x,z,n=6,height=2.2){
+      const group=new THREE.Group();group.position.set(x,-4.53,z);scene.add(group);
+      for(let i=0;i<n;i++){
+        const blade=ribbon(height*range(.59,1.17),range(.15,.37),range(-.85,.85),pick(leafMats));
+        blade.position.set(range(-.35,.35),0,range(-.28,.28));
+        blade.rotation.y=range(-.8,.8);blade.rotation.z=range(-.33,.33);
+        group.add(blade);
+      }
+      kelpGroups.push({group,phase:range(0,TAU),amount:range(.015,.04)});
+    }
+    for(const [x,z,n,h] of [[-7.8,-2.2,7,2.5],[-6.6,1.8,5,1.9],[-5.05,-3.3,4,2.1],[-2.1,-3.9,6,1.8],[.2,1.7,6,2.05],[2.2,-3.2,4,2.45],[4.5,2.7,6,1.8],[6.8,2.2,7,2.25],[7.6,-2.5,5,2.4]]) kelpPatch(x,z,n,h);
+
+    /* Tube sponges and sea anemones give the foreground recognisable
+       shapes even when the scene is shown on a small screen. */
+    function tubeSponge(x,z,s=1){
+      const group=new THREE.Group();group.position.set(x,-4.5,z);scene.add(group);
+      const colors=['#bf8999','#dbabb0','#c893a9'];
+      for(let i=0;i<4;i++){
+        const h=s*range(.6,1.4),r=s*range(.1,.19),xx=(i-1.5)*.22;
+        const body=mesh(new THREE.CylinderGeometry(r*.92,r*.63,h,10,3,true),standard(pick(colors),.8),group,xx,h*.5,range(-.12,.12));
+        body.rotation.z=range(-.19,.19);
+        const lip=mesh(new THREE.TorusGeometry(r*.91,r*.045,5,16),standard('#f2c7ba',.73),group,xx,h,body.position.z);
+        lip.rotation.x=Math.PI/2;
+        const hole=mesh(new THREE.CircleGeometry(r*.75,12),new THREE.MeshBasicMaterial({color:0x593e5e,side:THREE.DoubleSide}),group,xx,h-.015,body.position.z);
+        hole.rotation.x=-Math.PI/2;
+      }
+    }
+    tubeSponge(-3.6,.55,1.03);tubeSponge(2.3,1.8,.8);tubeSponge(7.4,-2,.68);
+    function anemone(x,z,s=1){
+      const group=new THREE.Group();group.position.set(x,-4.43,z);scene.add(group);
+      const base=mesh(new THREE.SphereGeometry(.45*s,14,10),standard('#ad6d72',.88),group,0,.17*s,0);
+      base.scale.y=.56;
+      const tentacleMat=standard('#ffc28d',.62);
+      const tipMat=new THREE.MeshBasicMaterial({color:0xffd8a0});
+      for(let i=0;i<20;i++){
+        const a=(i/20)*TAU,rr=range(.1,.38)*s,len=range(.43,.95)*s;
+        const x1=Math.cos(a)*rr,z1=Math.sin(a)*rr;
+        tube([new THREE.Vector3(x1,.27*s,z1),new THREE.Vector3(x1*1.3,.3*s+len*.52,z1*1.3),new THREE.Vector3(x1*1.55+Math.sin(i)*.09,len+.3*s,z1*1.55)],.022*s,tentacleMat,group,8);
+        ball(group,.04*s,tipMat,x1*1.55+Math.sin(i)*.09,len+.3*s,z1*1.55,6);
+      }
+      swaying.push({group,phase:range(0,TAU),amount:.012});
+    }
+    anemone(-4.6,1.6,.8);anemone(5.65,.95,.87);
+
+    /* A pair of small starfish are sculptural accents. No external
+       meshes or texture coordinates are needed: a radial triangle fan
+       with raised centre creates a faceted five-arm star. */
+    function starfish(x,z,r=.45,hex='#e7a783'){
+      const group=new THREE.Group();group.position.set(x,-4.47,z);scene.add(group);
+      const pts=[],idx=[],vCount=20;
+      pts.push(0,.075,0);
+      for(let i=0;i<vCount;i++){
+        const t=i/vCount*TAU;
+        const radius=i%4===0?r:(i%4===2?r*.36:r*.58);
+        pts.push(Math.cos(t)*radius,.012+(.035*radius/r),Math.sin(t)*radius);
+      }
+      for(let i=0;i<vCount;i++)idx.push(0,1+i,1+(i+1)%vCount);
+      const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));g.setIndex(idx);g.computeVertexNormals();
+      group.add(new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:hex,side:THREE.DoubleSide,roughness:.83})));
+      group.rotation.y=range(0,TAU);
+      for(let i=0;i<5;i++){
+        const t=i*TAU/5;
+        ball(group,.025,standard('#ffe3b4'),Math.cos(t)*r*.43,.07,Math.sin(t)*r*.43,5);
+      }
+    }
+    starfish(-5.05,3.0,.4);starfish(2.05,3.45,.34,'#ddb0a1');starfish(7.3,.3,.28,'#d8ad9d');
+
+    /* Fish body: the longitudinal profile and the radial cross sections
+       are authored in code. Smooth normals provide readable volume;
+       vertex colours paint each species without a texture lookup.
+       Since the group faces local +X, velocity controls orientation. */
+    const fishBodies=[];
+    const fishPickMeshes=[];
+    const finMats=new Map();
+    const eyeWhite=standard('#f8edc9',.3);
+    const pupilMat=standard('#071a28',.15,.06);
+    const glintMat=new THREE.MeshBasicMaterial({color:0xffffff});
+    function finMaterial(hex){
+      if(!finMats.has(hex))finMats.set(hex,new THREE.MeshStandardMaterial({color:hex,roughness:.47,metalness:.06,side:THREE.DoubleSide,transparent:true,opacity:.9}));
+      return finMats.get(hex);
+    }
+    function bodyProfile(x,s){
+      const center=-.06;
+      const normalized=(x-center)/1.18;
+      const base=Math.pow(Math.max(.001,1-normalized*normalized),.68);
+      const snout=1-.17*Math.max(0,(x-.4)/.7);
+      const tail=1-.13*Math.max(0,(-x-.5)/.6);
+      return Math.max(.05,base*snout*tail)*(s.tall?1.17:1);
+    }
+    function paintFish(s,x,angle){
+      const main=col(s.color),highlight=col(s.second),fin=col(s.fin);
+      let result=main.clone();
+      const shine=Math.max(0,Math.cos(angle))*.19+Math.max(0,Math.sin(angle))*.06;
+      result.lerp(highlight,Math.max(0,(x+.3)/2.5)*(.16+shine));
+      if(s.id==='surgeon'){
+        const patch=Math.exp(-Math.pow((x+.22)/.62,2))*Math.pow(Math.abs(Math.sin(angle)),.8);
+        result.lerp(col('#163b97'),patch*.92);
+        if(x<-.73)result.lerp(col('#f7d36c'),.55);
+      }
+      if(s.special==='clown'){
+        const band=Math.max(Math.exp(-Math.pow((x+.67)/.10,2)),Math.exp(-Math.pow((x-.15)/.15,2)),Math.exp(-Math.pow((x-.72)/.105,2)));
+        const rim=Math.max(Math.exp(-Math.pow((x+.67)/.16,2)),Math.exp(-Math.pow((x-.15)/.22,2)),Math.exp(-Math.pow((x-.72)/.17,2)));
+        result.lerp(col('#602e34'),rim*.84);
+        result.lerp(col('#fff9ea'),band*.99);
+      }
+      if(s.special==='butterfly'){
+        result.lerp(highlight,.36);
+        result.lerp(col('#2e3845'),Math.exp(-Math.pow((x-.54)/.11,2))*.94);
+        if(x<-.65)result.lerp(col('#dfae52'),.43);
+      }
+      if(s.special==='cardinal'){
+        for(const c of [-.55,.04,.62])result.lerp(col('#183143'),Math.exp(-Math.pow((x-c)/.12,2))*.85);
+        result.lerp(highlight,Math.max(0,Math.sin(angle*6.+x*7.))*.08);
+      }
+      if(s.special==='neon'){
+        result.lerp(highlight,Math.exp(-Math.pow(Math.sin(angle)-.27,2)/.08)*.58);
+        if(x<-.32)result.lerp(fin,.28);
+      }
+      if(s.id==='angel'){
+        result.lerp(highlight,Math.max(0,Math.sin(x*10.+angle*3.))*.15);
+        result.lerp(fin,Math.exp(-Math.pow((x+.84)/.22,2))*.55);
+      }
+      return result;
+    }
+    function createBody(s){
+      const vertices=[],normals=[],colors=[],indices=[];
+      const columns=32,rows=16;
+      for(let i=0;i<=columns;i++){
+        const x=-1.12+i/columns*2.24;
+        const p=bodyProfile(x,s);
+        for(let j=0;j<=rows;j++){
+          const a=j/rows*TAU;
+          const yy=Math.sin(a)*p*s.height;
+          const zz=Math.cos(a)*p*s.width;
+          const cheek=Math.max(0,(x-.15)/1.2)*.045;
+          vertices.push(x,yy+Math.max(0,x-.55)*.04,zz+cheek*Math.sign(zz));
+          const c=paintFish(s,x,a);
+          colors.push(c.r,c.g,c.b);
+          if(i<columns&&j<rows){const n=i*(rows+1)+j;indices.push(n,n+1,n+rows+1,n+1,n+rows+2,n+rows+1);}
+        }
+      }
+      const geometry=new THREE.BufferGeometry();
+      geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
+      geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+      geometry.setIndex(indices);geometry.computeVertexNormals();
+      return geometry;
+    }
+    function finShape(points,material,parent,z=0){
+      const shape=new THREE.Shape();shape.moveTo(...points[0]);
+      for(let i=1;i<points.length;i++)shape.lineTo(...points[i]);
+      shape.closePath();
+      return mesh(new THREE.ShapeGeometry(shape,4),material,parent,0,0,z);
+    }
+    function addFinRays(group,segments,hex,opacity=.4){
+      const m=lineMaterial(hex,opacity);
+      for(const points of segments){
+        const geometry=new THREE.BufferGeometry().setFromPoints(points.map(p=>new THREE.Vector3(...p)));
+        group.add(new THREE.Line(geometry,m));
+      }
+    }
+    function buildFish(s,index){
+      const fish=new THREE.Group();
+      const raw=new THREE.Group();fish.add(raw);
+      const tail=new THREE.Group();tail.position.x=-1.08;raw.add(tail);
+      const body=mesh(createBody(s),new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:.4,metalness:.04,clearcoat:.55,clearcoatRoughness:.22,side:THREE.DoubleSide}),raw);
+      body.userData.species=s.id;body.userData.fish=fish;fishPickMeshes.push(body);
+      const fm=finMaterial(s.fin);
+      const high=s.tall?1.2:.78;
+      const dorsal=finShape([[-.76,.19],[-.54,.58*high],[-.28,.88*high],[.13,.99*high],[.5,.76*high],[.83,.19]],fm,raw,-.015);
+      dorsal.rotation.x=.04;
+      const ventral=finShape([[-.68,-.18],[-.37,-.5*high],[.17,-.77*high],[.75,-.21]],fm,raw,.005);
+      const tailFin=finShape([[0,0],[-.48,.55*high],[-.86,.59*high],[-.65,0],[-.86,-.59*high],[-.48,-.55*high]],fm,tail);
+      const pectorals=[];
+      for(const side of [-1,1]){
+        const pectoral=finShape([[.12,-.04],[-.34,-.28],[-.4,-.57],[.19,-.17]],fm,raw,side*s.width*.92);
+        pectoral.rotation.y=side*.25;
+        pectorals.push(pectoral);
+        const eyeX=.72,eyeY=s.height*.16,eyeZ=side*(bodyProfile(eyeX,s)*s.width+.055);
+        const white=ball(raw,.103,eyeWhite,eyeX,eyeY,eyeZ,12);
+        white.scale.set(1,.95,.64);
+        ball(raw,.062,pupilMat,eyeX+.017,eyeY,eyeZ+side*.062,10);
+        ball(raw,.021,glintMat,eyeX+.032,eyeY+.025,eyeZ+side*.112,7);
+        const gillMaterial=lineMaterial(s.fin,.43);
+        const gillPoints=[];
+        for(let k=0;k<7;k++){
+          const t=k/6;gillPoints.push(new THREE.Vector3(.37-Math.sin(t*Math.PI)*.10,s.height*(.34-t*.63),side*(s.width*.92-t*.04)));
+        }
+        raw.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(gillPoints),gillMaterial));
+      }
+      const mouth=ball(raw,.047,standard(s.fin,.55),1.11,-.08,0,7);
+      mouth.scale.set(.55,.34,1);
+      if(s.special==='neon'){
+        const line=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([
+          new THREE.Vector3(-.72,.11,s.width*.77),new THREE.Vector3(-.1,.20,s.width*1.03),new THREE.Vector3(.66,.11,s.width*.79)]),13,.013,4,false),
+          new THREE.MeshBasicMaterial({color:0xc0fff0,transparent:true,opacity:.75}));
+        raw.add(line);
+      }
+      if(s.tall){
+        addFinRays(raw,[[[-.38,.5*high,0],[-.42,.8*high,0]],[[0,.57*high,0],[.1,.94*high,0]],[[.34,.53*high,0],[.48,.73*high,0]]],'#fceac6',.25);
+      }
+      const scale=range(...s.scale);
+      fish.scale.setScalar(scale);
+      const lane=index/(s.count+1);
+      const x=range(-6.7,6.7);
+      const y=clamp(-1.3+lane*4.8+range(-1.1,1.1),-3,3.3);
+      fish.position.set(x,y,range(...s.depth));
+      scene.add(fish);
+      const angle=range(0,TAU);
+      const velocity=new THREE.Vector3(Math.cos(angle),range(-.13,.13),Math.sin(angle)).multiplyScalar(range(...s.speed));
+      const state={group:fish,raw,tail,pectoral:pectorals,velocity,s,scale,phase:range(0,TAU),flap:range(7,10),desiredSpeed:range(...s.speed),seed:range(0,TAU),selected:false};
+      fish.userData.state=state;
+      fishBodies.push(state);
+      return state;
+    }
+    for(const s of SPECIES)for(let i=0;i<s.count;i++)buildFish(s,i);
+    countEl.textContent=String(fishBodies.length).padStart(2,'0');
+    $('#species-count').textContent=`${String(SPECIES.length).padStart(2,'0')} ВИДОВ`;
+
+    /* Jellyfish are decorative creatures near the back, separate from
+       the fish catalogue. Their translucent bell and trailing threads
+       move at different frequencies to suggest their gentle pulse. */
+    const jellyfish=[];
+    function addJellyfish(x,y,z,scale=.6){
+      const g=new THREE.Group();g.position.set(x,y,z);g.scale.setScalar(scale);scene.add(g);
+      const bell=mesh(new THREE.SphereGeometry(.65,24,12,0,TAU,0,Math.PI*.54),new THREE.MeshPhysicalMaterial({color:0x8ce8e0,transparent:true,opacity:.29,roughness:.14,metalness:.03,side:THREE.DoubleSide,depthWrite:false,emissive:0x2a8f9c,emissiveIntensity:.36}),g,0,0,0);
+      bell.scale.y=.67;
+      mesh(new THREE.TorusGeometry(.63,.029,4,26),new THREE.MeshBasicMaterial({color:0xbdf8ed,transparent:true,opacity:.5}),g,0,0,0).rotation.x=Math.PI/2;
+      const filaments=[];
+      for(let i=0;i<12;i++){
+        const a=i/12*TAU;const r=i%3===0?.27:.51;
+        const points=[];
+        for(let k=0;k<8;k++){
+          const t=k/7;
+          points.push(new THREE.Vector3(Math.cos(a)*r+Math.sin(t*7+a)*t*.09,-t*range(.8,1.48),Math.sin(a)*r+Math.cos(t*6+a)*t*.07));
+        }
+        const filament=tube(points,.008+i%4*.002,new THREE.MeshBasicMaterial({color:i%3?0xa4e9e4:0xe4bbdf,transparent:true,opacity:.42,depthWrite:false}),g,12);
+        filaments.push(filament);
+      }
+      jellyfish.push({group:g,bell,phase:range(0,TAU),origin:new THREE.Vector3(x,y,z)});
+    }
+    addJellyfish(-2.1,2.34,-4.0,.42);
+    addJellyfish(6.4,1.55,-4.15,.56);
+    addJellyfish(-7,2.1,-3.8,.39);
+
+    /* Bubbles use instanced meshes, one draw call instead of one mesh
+       per bubble. Each rises, drifts, and wraps to the tank bottom. */
+    const bubbleCount=105;
+    const bubbleMaterial=new THREE.MeshPhysicalMaterial({color:0xaaf9e9,transparent:true,opacity:.19,metalness:.12,roughness:.08,clearcoat:1,clearcoatRoughness:.07,depthWrite:false,side:THREE.FrontSide});
+    const bubbleMesh=new THREE.InstancedMesh(SMALL_SPHERE,bubbleMaterial,bubbleCount);
+    bubbleMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);bubbleMesh.frustumCulled=false;scene.add(bubbleMesh);
+    const bubbleData=[];
+    const dummy=new THREE.Object3D();
+    for(let i=0;i<bubbleCount;i++){
+      const source=pick([[-5.85,.7],[1.52,1.3],[6.03,1.0],[-2.1,-1.4],[3.9,-2.3]]);
+      bubbleData.push({x:source[0]+range(-.35,.35),y:range(-4.35,4.3),z:source[1]+range(-.3,.3),size:range(.025,.105),speed:range(.33,.9),phase:range(0,TAU),wobble:range(.06,.22)});
+    }
+    function updateBubbles(t,dt){
+      for(let i=0;i<bubbleCount;i++){
+        const b=bubbleData[i];b.y+=dt*b.speed;if(b.y>4.46)b.y=-4.48;
+        dummy.position.set(b.x+Math.sin(t*1.55+b.phase+b.y*2.8)*b.wobble,b.y,b.z+Math.sin(t*.8+b.phase*1.7)*.1);
+        const pulse=1+Math.sin(t*2.1+b.phase)*.1;
+        dummy.scale.setScalar(b.size*pulse);dummy.updateMatrix();bubbleMesh.setMatrixAt(i,dummy.matrix);
+      }
+      bubbleMesh.instanceMatrix.needsUpdate=true;
+    }
+    updateBubbles(0,0);
+
+    /* Suspended plankton is rendered as soft circular GPU points. The
+       additive glows are subtle by day and more noticeable at night. */
+    const planktonCount=390;
+    const pPos=new Float32Array(planktonCount*3),pSize=new Float32Array(planktonCount),pPhase=new Float32Array(planktonCount);
+    for(let i=0;i<planktonCount;i++){
+      pPos[3*i]=range(-8.75,8.75);pPos[3*i+1]=range(-4.1,4.42);pPos[3*i+2]=range(-4.35,3.8);
+      pSize[i]=range(1.3,4.9);pPhase[i]=range(0,TAU);
+    }
+    const planktonGeo=new THREE.BufferGeometry();
+    planktonGeo.setAttribute('position',new THREE.BufferAttribute(pPos,3));
+    planktonGeo.setAttribute('aSize',new THREE.BufferAttribute(pSize,1));
+    planktonGeo.setAttribute('aPhase',new THREE.BufferAttribute(pPhase,1));
+    const planktonUniforms={uTime:{value:0},uNight:{value:0},uPixelRatio:{value:renderer.getPixelRatio()}};
+    const planktonMat=new THREE.ShaderMaterial({uniforms:planktonUniforms,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
+      vertexShader:`attribute float aSize;attribute float aPhase;uniform float uTime;uniform float uPixelRatio;varying float vFade;
+        void main(){vec3 p=position;p.y+=sin(uTime*.41+aPhase)*.08;p.x+=sin(uTime*.35+aPhase)*.12;
+          vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;
+          gl_PointSize=min(11.,aSize*uPixelRatio*(24./max(9.,-mv.z)));
+          vFade=.4+.6*sin(uTime*.72+aPhase)*sin(uTime*.72+aPhase);}`,
+      fragmentShader:`uniform float uNight;varying float vFade;
+        void main(){float r=length(gl_PointCoord-.5);float glow=pow(1.-smoothstep(.02,.5,r),2.0);
+          vec3 c=mix(vec3(.42,.85,.74),vec3(.38,.94,1.),uNight);
+          gl_FragColor=vec4(c,glow*vFade*(.14+uNight*.23));}`});
+    const plankton=new THREE.Points(planktonGeo,planktonMat);plankton.frustumCulled=false;scene.add(plankton);
+
+    /* Feeding produces sinking pellets. Fish follow the nearest pellet
+       only within a limited radius, so the whole shoal does not snap to
+       the same target. Pellets fade, expire, and are removed cleanly. */
+    const pellets=[];
+    const pelletGeo=new THREE.SphereGeometry(.053,7,5);
+    const pelletMat=new THREE.MeshStandardMaterial({color:0xffe1a3,emissive:0xba7832,emissiveIntensity:.32,roughness:.73});
+    let lastFeed=0;
+    function feed(){
+      const now=performance.now();
+      if(now-lastFeed<1550){showToast('Подождите немного: рыбки ещё едят.');return;}
+      lastFeed=now;
+      for(let i=0;i<14;i++){
+        const pellet=mesh(pelletGeo,pelletMat,scene,range(-2.7,2.7),range(3.15,4.15),range(-1.7,2.2));
+        const k=range(.54,1.28);pellet.scale.setScalar(k);
+        pellets.push({mesh:pellet,fall:range(.34,.65),age:0,phase:range(0,TAU)});
+      }
+      showToast('Корм в воде. Посмотрите, кто подплывёт первым.');
+    }
+    function updatePellets(t,dt){
+      for(let i=pellets.length-1;i>=0;i--){
+        const p=pellets[i];p.age+=dt;p.mesh.position.y-=p.fall*dt;
+        p.mesh.position.x+=Math.sin(t*1.3+p.phase)*dt*.045;
+        p.mesh.rotation.y+=dt*.9;
+        if(p.mesh.position.y<-4.45||p.age>19){scene.remove(p.mesh);pellets.splice(i,1);}
+      }
+    }
+
+    /* Steering: inertia, a soft boundary, light separation, schooling,
+       slow wander, and nearby food. The squared-distance operations
+       avoid square roots until a vector actually needs normalization. */
+    const desired=new THREE.Vector3();
+    const steering=new THREE.Vector3();
+    const neighborVector=new THREE.Vector3();
+    const localAverage=new THREE.Vector3();
+    const localHeading=new THREE.Vector3();
+    const difference=new THREE.Vector3();
+    const foodVector=new THREE.Vector3();
+    function updateFish(t,dt){
+      for(const f of fishBodies){
+        const p=f.group.position;
+        desired.copy(f.velocity);
+        steering.set(0,0,0);
+        steering.x+=Math.sin(t*.42+f.seed)*.16;
+        steering.y+=Math.sin(t*.76+f.seed*2.1)*.12;
+        steering.z+=Math.cos(t*.5+f.seed*1.17)*.19;
+        const edgeX=6.9,edgeY=2.9,edgeZ=2.95;
+        if(p.x>edgeX)steering.x-=(p.x-edgeX)*.91+.19;
+        if(p.x< -edgeX)steering.x+=(-edgeX-p.x)*.91+.19;
+        if(p.y>edgeY)steering.y-=(p.y-edgeY)*.91+.19;
+        if(p.y< -edgeY)steering.y+=(-edgeY-p.y)*.91+.19;
+        if(p.z>edgeZ)steering.z-=(p.z-edgeZ)*.92+.19;
+        if(p.z< -edgeZ)steering.z+=(-edgeZ-p.z)*.92+.19;
+        neighborVector.set(0,0,0);localAverage.set(0,0,0);localHeading.set(0,0,0);
+        let neighborCount=0;
+        for(const other of fishBodies){
+          if(f===other)continue;
+          difference.subVectors(p,other.group.position);
+          const ds=difference.lengthSq();
+          if(ds<.72&&ds>.0001)neighborVector.addScaledVector(difference,1/(ds+.08));
+          if(f.s.school&&other.s===f.s&&ds<11.8&&ds>.1){
+            localAverage.add(other.group.position);localHeading.add(other.velocity);neighborCount++;
+          }
+        }
+        steering.addScaledVector(neighborVector,.19);
+        if(neighborCount){
+          localAverage.multiplyScalar(1/neighborCount).sub(p);
+          localHeading.multiplyScalar(1/neighborCount).sub(f.velocity);
+          steering.addScaledVector(localAverage,.027);
+          steering.addScaledVector(localHeading,.039);
+        }
+        let nearest=null,nearestDist=9.2;
+        for(const pellet of pellets){
+          const d=p.distanceToSquared(pellet.mesh.position);
+          if(d<nearestDist){nearestDist=d;nearest=pellet;}
+        }
+        if(nearest){
+          foodVector.subVectors(nearest.mesh.position,p).normalize();
+          steering.addScaledVector(foodVector,Math.min(.71,.42+1/(nearestDist+1)*.3));
+          if(nearestDist<.17){scene.remove(nearest.mesh);pellets.splice(pellets.indexOf(nearest),1);}
+        }
+        f.velocity.addScaledVector(steering,dt);
+        const speed=f.velocity.length();
+        const target=nearest?f.desiredSpeed*1.55:f.desiredSpeed;
+        const targetSpeed=clamp(speed,target*.57,target*1.48);
+        if(speed>.0001)f.velocity.multiplyScalar(lerp(speed,targetSpeed,Math.min(1,dt*1.5))/speed);
+        p.addScaledVector(f.velocity,dt);
+        p.x=clamp(p.x,-7.7,7.7);p.y=clamp(p.y,-3.48,3.7);p.z=clamp(p.z,-3.65,3.65);
+        const dir=Math.atan2(-f.velocity.z,f.velocity.x);
+        const bank=Math.atan2(f.velocity.y,Math.hypot(f.velocity.x,f.velocity.z))*.73;
+        f.group.rotation.y=easeAngle(f.group.rotation.y,dir,Math.min(1,dt*3.4));
+        f.group.rotation.z=lerp(f.group.rotation.z,bank,Math.min(1,dt*2.4));
+        const beat=t*f.flap+f.phase;
+        f.tail.rotation.y=Math.sin(beat)*.34;
+        f.pectoral[0].rotation.y=-.25+Math.sin(beat*.73)*.18;
+        f.pectoral[1].rotation.y=.25-Math.sin(beat*.73+.8)*.18;
+        f.raw.rotation.z=Math.sin(t*2.5+f.phase)*.018;
+        f.raw.position.y=Math.sin(t*1.85+f.phase)*.055;
+      }
+    }
+
+    /* Selection is shared between the side catalogue and direct raycast
+       interaction. The highlight is a faint ring in front of the chosen
+       fish, not an opaque object that would cover its markings. */
+    let selectedId='surgeon';
+    let focusedFish=null;
+    const highlight=mesh(new THREE.TorusGeometry(.88,.012,6,55),new THREE.MeshBasicMaterial({color:0xa4ffe2,transparent:true,opacity:.76,depthWrite:false}),scene);
+    highlight.visible=false;
+    function speciesIcon(s){
+      const main=s.color,secondary=s.second;
+      return `<svg viewBox="0 0 52 35" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="m11 18-9-8v16l9-8Z" fill="${s.fin}"/><path d="M9 17.5C16 5 35 5 48 17.5 35 31 17 30 9 17.5Z" fill="${main}"/><path d="M13 17.5C24 12 34 14 43 18c-10 8-23 6-30-.5Z" fill="${secondary}" opacity=".52"/><circle cx="39" cy="15" r="2.4" fill="#102f39"/><circle cx="39.6" cy="14.4" r=".7" fill="#fff"/></svg>`;
+    }
+    for(const s of SPECIES){
+      const button=document.createElement('button');
+      button.type='button';button.className='species';button.dataset.species=s.id;
+      button.setAttribute('aria-pressed',String(s.id===selectedId));
+      button.innerHTML=`<span class="species-swatch">${speciesIcon(s)}</span><span><span class="species-name"></span><span class="species-latin"></span></span><span class="species-arrow" aria-hidden="true">↗</span>`;
+      $('.species-name',button).textContent=s.name;
+      $('.species-latin',button).textContent=s.latin;
+      button.addEventListener('click',()=>selectSpecies(s.id,true));
+      speciesEl.appendChild(button);
+    }
+    function selectSpecies(id,fromCatalog=false,fish=null){
+      const s=speciesById.get(id);if(!s)return;
+      selectedId=id;
+      profileEls.name.textContent=s.name;
+      profileEls.latin.textContent=s.latin;
+      profileEls.description.textContent=s.description;
+      profileEls.fact.textContent=s.fact;
+      $$('.species',speciesEl).forEach(el=>el.setAttribute('aria-pressed',String(el.dataset.species===id)));
+      if(fish){focusedFish=fish;}
+      else if(fromCatalog){
+        const candidates=fishBodies.filter(f=>f.s.id===id);
+        focusedFish=candidates.reduce((best,f)=>!best||Math.abs(f.group.position.x)<Math.abs(best.group.position.x)?f:best,null);
+      }
+      highlight.visible=Boolean(focusedFish);
+    }
+    function randomSpecies(){
+      const s=pick(SPECIES.filter(s=>s.id!==selectedId));
+      selectSpecies(s.id,true);
+      showToast(`Знакомьтесь: ${s.name.toLowerCase()}.`);
+    }
+    const raycaster=new THREE.Raycaster();
+    const pointer=new THREE.Vector2();
+    function fishUnderPointer(clientX,clientY){
+      const rect=renderer.domElement.getBoundingClientRect();
+      pointer.set(((clientX-rect.left)/rect.width)*2-1,-((clientY-rect.top)/rect.height)*2+1);
+      raycaster.setFromCamera(pointer,camera);
+      const found=raycaster.intersectObjects(fishPickMeshes,false);
+      return found.length?found[0].object.userData.fish.userData.state:null;
+    }
+    let downPos=null;
+    renderer.domElement.addEventListener('pointerdown',e=>{downPos={x:e.clientX,y:e.clientY};});
+    renderer.domElement.addEventListener('pointerup',e=>{
+      if(!downPos||Math.hypot(e.clientX-downPos.x,e.clientY-downPos.y)>8)return;
+      const f=fishUnderPointer(e.clientX,e.clientY);
+      if(f){selectSpecies(f.s.id,false,f);showToast(`${f.s.name}. Подробнее — в полевом справочнике.`);}
+      downPos=null;
+    });
+    renderer.domElement.addEventListener('pointermove',e=>{
+      if(e.pointerType==='touch')return;
+      const f=fishUnderPointer(e.clientX,e.clientY);
+      if(f){
+        const rect=tank.getBoundingClientRect();
+        tooltip.textContent=f.s.name;
+        const small=document.createElement('small');small.textContent='Нажмите, чтобы узнать больше';tooltip.appendChild(small);
+        tooltip.style.left=`${clamp(e.clientX-rect.left,8,rect.width-177)}px`;
+        tooltip.style.top=`${clamp(e.clientY-rect.top,45,rect.height-8)}px`;
+        tooltip.classList.add('visible');
+        renderer.domElement.style.cursor='pointer';
+      }else{tooltip.classList.remove('visible');renderer.domElement.style.cursor='grab';}
+    });
+    renderer.domElement.addEventListener('pointerleave',()=>{tooltip.classList.remove('visible');downPos=null;});
+    controls.addEventListener('start',()=>{renderer.domElement.style.cursor='grabbing';tooltip.classList.remove('visible');});
+    controls.addEventListener('end',()=>{renderer.domElement.style.cursor='grab';});
+
+    /* Palette transitions happen gradually in the render loop. This
+       avoids sudden flashes when switching from noon to nighttime. */
+    const modeSettings={
+      day:{night:0,warm:0,ambient:2.15,sun:2.5,teal:85,rose:30,moon:0,exposure:1.55,background:'#092d39'},
+      sunset:{night:.16,warm:1,ambient:1.75,sun:2.35,teal:60,rose:96,moon:0,exposure:1.42,background:'#25444c'},
+      night:{night:1,warm:0,ambient:.71,sun:.14,teal:31,rose:7,moon:53,exposure:1.55,background:'#061e2c'}
+    };
+    let targetMode=modeSettings.day;
+    let currentNight=0,currentWarm=0;
+    let sceneMode='day';
+    function setMode(mode){
+      if(!modeSettings[mode])return;
+      sceneMode=mode;targetMode=modeSettings[mode];
+      document.body.dataset.mode=mode;
+      $$('.mode').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.sceneMode===mode)));
+      showToast(({day:'Солнце над лагуной.',sunset:'Риф встречает закат.',night:'Лагуна в лунном свете.'})[mode]);
+    }
+    function updatePalette(dt){
+      const k=Math.min(1,dt*1.5);
+      currentNight=lerp(currentNight,targetMode.night,k);
+      currentWarm=lerp(currentWarm,targetMode.warm,k);
+      ambient.intensity=lerp(ambient.intensity,targetMode.ambient,k);
+      sunlight.intensity=lerp(sunlight.intensity,targetMode.sun,k);
+      tealFill.intensity=lerp(tealFill.intensity,targetMode.teal,k);
+      roseFill.intensity=lerp(roseFill.intensity,targetMode.rose,k);
+      moonFill.intensity=lerp(moonFill.intensity,targetMode.moon,k);
+      renderer.toneMappingExposure=lerp(renderer.toneMappingExposure,targetMode.exposure,k);
+      backdropUniforms.uNight.value=currentNight;
+      backdropUniforms.uWarm.value=currentWarm;
+      floorUniforms.uNight.value=currentNight;
+      floorUniforms.uWarm.value=currentWarm;
+      planktonUniforms.uNight.value=currentNight;
+      sunlight.color.setRGB(lerp(1,1.0,currentWarm),lerp(1,.72,currentWarm),lerp(1,.62,currentWarm));
+      scene.background.lerp(col(targetMode.background),k);
+    }
+
+    /* Web Audio is strictly opt-in. Brown-filtered noise emulates
+       underwater wash; short decaying sine pings evoke distant bubbles.
+       We do not fetch audio or retain a microphone or recording. */
+    let audioCtx=null,audioMaster=null,oceanSource=null,bubbleTimer=null,soundOn=false;
+    async function startSound(){
+      try{
+        audioCtx ||= new (window.AudioContext||window.webkitAudioContext)();
+        await audioCtx.resume();
+        if(!audioMaster){
+          audioMaster=audioCtx.createGain();audioMaster.gain.value=0;audioMaster.connect(audioCtx.destination);
+          const len=audioCtx.sampleRate*3;
+          const buffer=audioCtx.createBuffer(1,len,audioCtx.sampleRate);
+          const channel=buffer.getChannelData(0);
+          let brown=0;
+          for(let i=0;i<len;i++){brown=(brown+(.05*(Math.random()*2-1)))/1.025;channel[i]=brown*.31;}
+          oceanSource=audioCtx.createBufferSource();oceanSource.buffer=buffer;oceanSource.loop=true;
+          const low=audioCtx.createBiquadFilter();low.type='lowpass';low.frequency.value=400;
+          const high=audioCtx.createBiquadFilter();high.type='highpass';high.frequency.value=45;
+          oceanSource.connect(low);low.connect(high);high.connect(audioMaster);oceanSource.start();
+        }
+        audioMaster.gain.setTargetAtTime(.29,audioCtx.currentTime,.45);
+        bubbleTimer ||= window.setInterval(()=>{
+          if(!soundOn||!audioCtx||audioCtx.state!=='running')return;
+          const osc=audioCtx.createOscillator(),g=audioCtx.createGain();
+          const start=audioCtx.currentTime;
+          osc.type='sine';osc.frequency.setValueAtTime(range(310,690),start);
+          osc.frequency.exponentialRampToValueAtTime(range(550,850),start+.13);
+          g.gain.setValueAtTime(.0001,start);
+          g.gain.exponentialRampToValueAtTime(.011,start+.026);
+          g.gain.exponentialRampToValueAtTime(.0001,start+.18);
+          osc.connect(g);g.connect(audioMaster);osc.start(start);osc.stop(start+.19);
+        },680);
+      }catch(err){
+        console.warn('Audio is unavailable:',err);
+        soundOn=false;$('#sound-toggle').setAttribute('aria-checked','false');$('#sound-toggle').setAttribute('aria-pressed','false');
+        showToast('Звук недоступен в этом браузере.');
+      }
+    }
+    function setSound(value){
+      soundOn=value;
+      const b=$('#sound-toggle');b.setAttribute('aria-checked',String(value));b.setAttribute('aria-pressed',String(value));
+      if(value)startSound();
+      else if(audioMaster&&audioCtx)audioMaster.gain.setTargetAtTime(0,audioCtx.currentTime,.16);
+    }
+    let paused=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function setPaused(value){
+      paused=value;
+      const b=$('#pause-toggle');b.setAttribute('aria-checked',String(value));b.setAttribute('aria-pressed',String(value));
+    }
+    setPaused(paused);
+
+    /* Interface: shortcuts are inactive while the dialog is open, and
+       buttons remain ordinary focusable controls for keyboard readers. */
+    let toastTimer=0;
+    function showToast(message){
+      toastEl.textContent=message;toastEl.classList.add('visible');
+      clearTimeout(toastTimer);toastTimer=setTimeout(()=>toastEl.classList.remove('visible'),3400);
+    }
+    $$('.mode').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.sceneMode)));
+    $('#sound-toggle').addEventListener('click',()=>setSound(!soundOn));
+    $('#pause-toggle').addEventListener('click',()=>setPaused(!paused));
+    $('#feed-button').addEventListener('click',feed);
+    $('#random-button').addEventListener('click',randomSpecies);
+    $('#reset-view').addEventListener('click',()=>{
+      camera.position.set(0,2.35,24.5);
+      controls.target.set(0,-.25,0);controls.update();
+      showToast('Вернулись к исходному виду.');
+    });
+    $('#save-photo').addEventListener('click',()=>{
+      try{
+        renderer.render(scene,camera);
+        const a=document.createElement('a');
+        a.download='pelagia-living-reef.png';a.href=renderer.domElement.toDataURL('image/png');
+        document.body.appendChild(a);a.click();a.remove();
+        showToast('Снимок аквариума сохранён.');
+      }catch(err){console.warn(err);showToast('Не удалось сохранить снимок.');}
+    });
+    const modal=$('#help-modal');
+    const openHelp=$('#show-help');
+    const closeHelp=$('#close-help');
+    function hideHelp(){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');openHelp.focus();}
+    function showHelp(){modal.classList.add('open');modal.setAttribute('aria-hidden','false');closeHelp.focus();}
+    openHelp.addEventListener('click',showHelp);
+    closeHelp.addEventListener('click',hideHelp);
+    modal.addEventListener('click',e=>{if(e.target===modal)hideHelp();});
+    modal.addEventListener('keydown',e=>{
+      if(e.key!=='Tab')return;
+      const elements=$$('button, a, [tabindex]:not([tabindex="-1"])',modal);
+      const first=elements[0],last=elements[elements.length-1];
+      if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+      else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+    });
+    window.addEventListener('keydown',e=>{
+      if(modal.classList.contains('open')){if(e.key==='Escape')hideHelp();return;}
+      if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName))return;
+      if(e.code==='Space'){e.preventDefault();setPaused(!paused);}
+      if(e.key.toLowerCase()==='f')feed();
+      if(e.key.toLowerCase()==='r')$('#reset-view').click();
+    });
+
+    /* Timekeeping is explicitly delta-capped. A hidden tab does not
+       advance the simulation by hours when it is shown again. Pause
+       freezes natural motion, while OrbitControls can still be used. */
+    const clock=new THREE.Clock();
+    let simTime=0,firstFrame=true;
+    function frame(){
+      requestAnimationFrame(frame);
+      const dt=Math.min(clock.getDelta(),.045);
+      controls.update();
+      updatePalette(dt);
+      if(!paused&&!document.hidden){
+        simTime+=dt;
+        backdropUniforms.uTime.value=simTime;
+        floorUniforms.uTime.value=simTime;
+        planktonUniforms.uTime.value=simTime;
+        updateFish(simTime,dt);
+        updateBubbles(simTime,dt);
+        updatePellets(simTime,dt);
+        for(const item of swaying){item.group.rotation.z=Math.sin(simTime*.66+item.phase)*item.amount;}
+        for(const item of kelpGroups){item.group.rotation.z=Math.sin(simTime*.86+item.phase)*item.amount;}
+        for(const j of jellyfish){
+          j.group.position.x=j.origin.x+Math.sin(simTime*.42+j.phase)*.4;
+          j.group.position.y=j.origin.y+Math.sin(simTime*.56+j.phase)*.27;
+          const pulse=1+Math.sin(simTime*2.3+j.phase)*.07;
+          j.bell.scale.set(pulse,.67/pulse,pulse);
+        }
+        for(let i=0;i<beams.length;i++)beams[i].material.opacity=(i===1?.06:.045)*(1+Math.sin(simTime*.45+i)*.18)*(1-currentNight*.34);
+      }
+      if(focusedFish){
+        const fish=focusedFish.group;
+        highlight.position.copy(fish.position);
+        highlight.position.z+=focusedFish.scale*.47;
+        highlight.scale.setScalar(focusedFish.scale*.95*(1+Math.sin(simTime*2.4)*.04));
+        highlight.lookAt(camera.position);
+      }
+      renderer.render(scene,camera);
+      if(firstFrame){firstFrame=false;requestAnimationFrame(()=>loading.classList.add('done'));}
+    }
+    const resize=new ResizeObserver(()=>{
+      const width=Math.max(1,tank.clientWidth),height=Math.max(1,tank.clientHeight);
+      camera.aspect=width/height;
+      // Narrow mobile windows need a wider angle to keep the side reefs visible.
+      camera.fov=width<550?46:39;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width,height,false);
+      planktonUniforms.uPixelRatio.value=renderer.getPixelRatio();
+    });
+    resize.observe(tank);
+    frame();
+    console.info('PELAGIA: живой риф запущен · Three.js r160 · ',fishBodies.length,'рыб,',SPECIES.length,'видов');
+  </script>
+</body>
+</html>
